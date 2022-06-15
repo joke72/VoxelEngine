@@ -6,7 +6,6 @@ VertexArray::VertexArray()
 {
 	glGenVertexArrays(1, &m_RendererID);
 	Bind();
-	std::cout << "vao initialized" << std::endl;
 }
 
 VertexArray::~VertexArray()

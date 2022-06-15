@@ -12,14 +12,14 @@ out int blockID;
 void main()
 {
 
-    normal = vec3((aChunkInfo >> 14) & 1, (aChunkInfo >> 13) & 1, (aChunkInfo >> 12) & 1);
-    blockID = (aChunkInfo >> 16) & 255;
+    normal = vec3((aChunkInfo >> 20) & 1, (aChunkInfo >> 19) & 1, (aChunkInfo >> 18) & 1);
+    blockID = (aChunkInfo >> 24) & 255;
 
-    if(((aChunkInfo >> 15) & 1) == 1)
+    if(((aChunkInfo >> 21) & 1) == 1)
         normal *= -1;
 
 
-    vec3 aPos = vec3((aChunkInfo >> 8) & 15, (aChunkInfo >> 4) & 15, aChunkInfo & 15) + uChunkPosition * uChunkSize;
+    vec3 aPos = vec3((aChunkInfo >> 12) & 63, (aChunkInfo >> 6) & 63, (aChunkInfo) & 63) + uChunkPosition * uChunkSize;
 
     gl_Position = uProjection * uView * vec4(aPos, 1.0);
 }

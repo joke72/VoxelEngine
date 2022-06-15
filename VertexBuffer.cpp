@@ -3,7 +3,6 @@
 
 VertexBuffer::VertexBuffer(const void* data, unsigned int size, GLenum usage)
 {
-	std::cout << "vertex buffer initialized" << std::endl;
 
 	glGenBuffers(1, &m_RendererID);
 	glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
