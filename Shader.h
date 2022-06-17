@@ -19,7 +19,15 @@ private:
 
 public:
 
+	static Shader defaultShader;
+	static Shader blockShader;
+	static Shader screenShader;
+
+	static void InitShaders();
+
 	unsigned int ID;
+
+	Shader();
 
 	Shader(const char* vertexPath, const char* fragmentPath);
 	Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath);

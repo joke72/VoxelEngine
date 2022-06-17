@@ -19,11 +19,13 @@ public:
 
 	~VertexArray();
 
+	void AddBuffer(const VertexBuffer& vbo, const VertexBufferLayout& layout);
 	void AddBuffer(const VertexBuffer& vbo, const IndexBuffer& ibo, const VertexBufferLayout& layout);
+
 
 	void Bind() const;
 
-	static void Unbind();
+	void Unbind() const;
 
 	unsigned int GetRendererID() const;
 

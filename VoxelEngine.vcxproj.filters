@@ -48,14 +48,23 @@
     <ClCompile Include="Chunk.cpp">
       <Filter>Source Files\world</Filter>
     </ClCompile>
-    <ClCompile Include="Camera.cpp">
-      <Filter>Source Files\world</Filter>
-    </ClCompile>
     <ClCompile Include="Shader.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
     <ClCompile Include="glad.c">
       <Filter>Source Files\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="Constants.cpp">
+      <Filter>Source Files\world</Filter>
+    </ClCompile>
+    <ClCompile Include="PointLight.cpp">
+      <Filter>Source Files\world</Filter>
+    </ClCompile>
+    <ClCompile Include="Framebuffer.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Source Files\graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -77,9 +86,6 @@
     <ClInclude Include="Chunk.h">
       <Filter>Source Files\world</Filter>
     </ClInclude>
-    <ClInclude Include="Camera.h">
-      <Filter>Source Files\world</Filter>
-    </ClInclude>
     <ClInclude Include="Shader.h">
       <Filter>Source Files\graphics</Filter>
     </ClInclude>
@@ -92,12 +98,33 @@
     <ClInclude Include="ChunkRenderData.h">
       <Filter>Source Files\graphics</Filter>
     </ClInclude>
+    <ClInclude Include="PointLight.h">
+      <Filter>Source Files\world</Filter>
+    </ClInclude>
+    <ClInclude Include="Framebuffer.h">
+      <Filter>Source Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Source Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <None Include="block.vert">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="block.frag">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
     <None Include="default.vert">
       <Filter>Resource Files\shaders</Filter>
     </None>
     <None Include="default.frag">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="postproc.vert">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="postproc.frag">
       <Filter>Resource Files\shaders</Filter>
     </None>
   </ItemGroup>

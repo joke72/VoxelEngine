@@ -6,7 +6,9 @@
 #include "Camera.h"
 #include "ChunkRenderer.h"
 #include "Chunk.h"
+#include "Framebuffer.h"
 #include "Input.h"
+#include "PointLight.h"
 #include "Shader.h"
 #include "Time.h"
 #include "VertexArray.h"
@@ -58,10 +60,20 @@ int initGLFW(GLFWwindow** window)
     glfwSetInputMode(*window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
+glm::vec3 getColor(int col)
+{
+    float r = (float) ((col >> 16) & 0xFF) / 255;
+    float g = (float) ((col >> 8) & 0xFF) / 255;
+    float b = (float) ((col >> 0) & 0xFF) / 255;
+
+    return glm::vec3(r, g, b);
+}
+
 void loop(GLFWwindow* window)
 {
+    glm::vec3 col = getColor(0x3E7C17);
+    std::cout << col.x << ", " << col.y << ", " << col.z << std::endl;
     
-
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -211,17 +223,57 @@ void loop(GLFWwindow* window)
         0b00000000100010000001000001000000
     };
 
-    Shader shader("default.vert", "default.frag");
+    Shader::InitShaders();
+
+    PointLight pointLight0(glm::vec3(10.0f, 60.0f, 10.0f), glm::vec3(0.8f, 0.6f, 0.2f), 500.0f);
+
+    PointLight pointLight1(glm::vec3(100.0f, 60.0f, 30.0f), glm::vec3(0.8f, 0.6f, 0.2f), 100.0f);
+
+    PointLight pointLight2(glm::vec3(100.0f, 60.0f, 100.0f), glm::vec3(0.8f, 0.6f, 0.2f), 100.0f);
+
+
+    float quad[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+        // positions   // texCoords
+        -1.0f,  1.0f,  0.0f, 1.0f,
+        -1.0f, -1.0f,  0.0f, 0.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+
+        -1.0f,  1.0f,  0.0f, 1.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+         1.0f,  1.0f,  1.0f, 1.0f
+    };
+
+    VertexArray frameBufferVAO;
+    VertexBuffer vertexBuffer(&quad, sizeof(quad), GL_STATIC_DRAW);
+    
+    VertexBufferLayout layout;
+    layout.AddVertexAttribute(GL_FLOAT, 2);
+    layout.AddVertexAttribute(GL_FLOAT, 2);
+
+    frameBufferVAO.AddBuffer(vertexBuffer, layout);
+
+    PointLight::InitShaderAll(Shader::blockShader);
+
+    FramebufferSpecification fbSpec = {
+        screenWidth, screenHeight, GL_RGB, GL_COLOR_ATTACHMENT0
+    };
+
+    Framebuffer framebuffer(fbSpec);
+
+    framebuffer.AddRenderBuffer(GL_DEPTH24_STENCIL8, GL_DEPTH_ATTACHMENT);
+
 
     float accumulator = 0.0f;
     int frames = 0;
-    glm::vec3 chunkPos0(0.0, 0.0, 0.0);
-    glm::vec3 chunkPos1(1.0, 0.0, 0.0);
 
-    shader.use();
-    shader.setInt("uChunkSize", CHUNK_SIZE);
+    Shader::blockShader.use();
+    Shader::blockShader.setInt("uChunkSize", CHUNK_SIZE);
 
-    const int len = 4;
+    Shader::blockShader.setVec3("dirLight.ambient", glm::vec3(0.5, 0.5, 0.5));
+    Shader::blockShader.setVec3("dirLight.diffuse", glm::vec3(0.5, 0.5, 0.5));
+    Shader::blockShader.setVec3("dirLight.specular", glm::vec3(1.0, 1.0, 1.0));
+
+    const int len = 8;
 
     std::vector<Chunk*> chunks;
 
@@ -233,7 +285,6 @@ void loop(GLFWwindow* window)
             chunks.push_back(c);
         }
     }
-
 
     while (!glfwWindowShouldClose(window))
     {
@@ -261,21 +312,47 @@ void loop(GLFWwindow* window)
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), screenWidth / screenHeight, 0.1f, 1000.0f);
         glm::mat4 view = Camera::MAIN.getViewMatrix();
 
-        shader.use();
-        shader.setMat4("uProjection", projection);
-        shader.setMat4("uView", view);
+        Shader::blockShader.use();
+        Shader::blockShader.setMat4("uProjection", projection);
+        Shader::blockShader.setMat4("uView", view);
 
-        /* RENDER SCENE */
+        Shader::blockShader.setVec3("dirLight.direction", glm::vec3(0.0f, -1.0f, 0.0f));
+        Shader::blockShader.setVec3("uViewPos", Camera::MAIN.m_Position);
 
+
+        framebuffer.Bind();
+
+        /* CLEAR SCREEN */
+
+        glm::vec3 col = getColor(0x92B4EC);
+        glClearColor(col.x, col.y, col.z, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        glEnable(GL_DEPTH_TEST);
+
+        /* RENDER SCENE */
+         
+
+        PointLight::UpdateShaderAll(Shader::blockShader, view);
+
+        PointLight::DrawLights(view, projection);
 
         for (int i = 0; i < len * len; i++)
         {
-            chunkRenderer.Render(chunks[i]->m_RenderData, shader);
+            chunkRenderer.Render(chunks[i]->m_RenderData, Shader::blockShader);
         }
-        
+        //pointLight0.Draw(view, projection, defaultShader);
 
+        framebuffer.Unbind();
+        
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        Shader::screenShader.use();
+        frameBufferVAO.Bind();
+        glDisable(GL_DEPTH_TEST);
+        framebuffer.BindTexture();
+        glDrawArrays(GL_TRIANGLES, 0, 6);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -288,13 +365,14 @@ void loop(GLFWwindow* window)
         delete chunks[i];
     }
 
+    PointLight::Deinit();
+
     glfwTerminate();
 }
 
 int main()
 {
 
-    std::cout << "test" << std::endl;
     //Initialize window
     GLFWwindow* window;
     

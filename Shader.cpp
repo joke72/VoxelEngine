@@ -1,5 +1,21 @@
 #include "Shader.h"
 
+Shader Shader::defaultShader;
+Shader Shader::blockShader;
+Shader Shader::screenShader;
+
+void Shader::InitShaders()
+{
+	Shader::defaultShader = Shader("default.vert", "default.frag");
+	Shader::blockShader = Shader("block.vert", "block.frag");
+	Shader::screenShader = Shader("postproc.vert", "postproc.frag");
+}
+
+Shader::Shader()
+{
+
+}
+
 void Shader::compileShaders(const char* vShaderCode, const char* fShaderCode)
 {
 	unsigned int vertex, fragment;

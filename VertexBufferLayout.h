@@ -27,8 +27,8 @@ public:
 
 	unsigned int GetStride() const;
 
-
 	static unsigned int GetTypeSize(unsigned int type);
+
 
 };
 

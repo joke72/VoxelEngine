@@ -20,4 +20,6 @@ public:
 	void Bind() const;
 	
 	static void Unbind();
+
+	unsigned int GetRendererID() const;
 };
