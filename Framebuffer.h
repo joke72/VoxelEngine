@@ -7,8 +7,10 @@
 struct FramebufferSpecification {
 	uint32_t Width;
 	uint32_t Height;
+	uint32_t InternalTextureFormat;
 	uint32_t TextureFormat;
-	uint32_t Attachment;	
+	uint32_t Attachment;
+	uint32_t Type;
 };
 
 

@@ -13,10 +13,8 @@ public:
 
 	GLuint* m_ChunkIndices;
 	IndexBuffer m_IBO;
-	VertexBufferLayout m_Layout;
 
-
-	void Render(const ChunkRenderData& chunk, const Shader& shader);
+	void Render(const ChunkRenderData& chunk, const Shader& shader) const;
 
 	ChunkRenderer();
 	~ChunkRenderer();

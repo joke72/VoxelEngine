@@ -68,6 +68,25 @@ glm::vec3 getColor(int col)
 
     return glm::vec3(r, g, b);
 }
+const int len = 2;
+
+glm::vec3 lightDirection(1.0f, 1.0f, 1.0f);
+
+void renderScene(const ChunkRenderer& chunkRenderer, const std::vector<Chunk*>& chunks, const Shader& shader)
+{
+
+
+    //PointLight::DrawLights(view, projection);
+
+    for (int i = 0; i < len * len; i++)
+    {
+        chunkRenderer.Render(chunks[i]->m_RenderData, shader);
+    }
+    //pointLight0.Draw(view, projection, defaultShader);
+}
+
+uint32_t shadowWidth = 1024*4;
+uint32_t shadowHeight = 1024*4;
 
 void loop(GLFWwindow* window)
 {
@@ -78,6 +97,7 @@ void loop(GLFWwindow* window)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_CULL_FACE);
+
 
     ChunkRenderer chunkRenderer;
 
@@ -225,7 +245,9 @@ void loop(GLFWwindow* window)
 
     Shader::InitShaders();
 
-    PointLight pointLight0(glm::vec3(10.0f, 60.0f, 10.0f), glm::vec3(0.8f, 0.6f, 0.2f), 500.0f);
+    VertexBufferLayout::Init();
+
+    PointLight pointLight0(glm::vec3(10.0f, 34.0f, 10.0f), glm::vec3(0.8f, 0.6f, 0.2f), 100.0f);
 
     PointLight pointLight1(glm::vec3(100.0f, 60.0f, 30.0f), glm::vec3(0.8f, 0.6f, 0.2f), 100.0f);
 
@@ -234,33 +256,34 @@ void loop(GLFWwindow* window)
 
     float quad[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
         // positions   // texCoords
-        -1.0f,  1.0f,  0.0f, 1.0f,
+        -1.0f,  0.0f,  0.0f, 1.0f,
         -1.0f, -1.0f,  0.0f, 0.0f,
-         1.0f, -1.0f,  1.0f, 0.0f,
+         0.0f, -1.0f,  1.0f, 0.0f,
 
-        -1.0f,  1.0f,  0.0f, 1.0f,
-         1.0f, -1.0f,  1.0f, 0.0f,
-         1.0f,  1.0f,  1.0f, 1.0f
+        -1.0f,  0.0f,  0.0f, 1.0f,
+         0.0f, -1.0f,  1.0f, 0.0f,
+         0.0f,  0.0f,  1.0f, 1.0f
     };
 
     VertexArray frameBufferVAO;
     VertexBuffer vertexBuffer(&quad, sizeof(quad), GL_STATIC_DRAW);
     
-    VertexBufferLayout layout;
-    layout.AddVertexAttribute(GL_FLOAT, 2);
-    layout.AddVertexAttribute(GL_FLOAT, 2);
 
-    frameBufferVAO.AddBuffer(vertexBuffer, layout);
+    frameBufferVAO.AddBuffer(vertexBuffer, VertexBufferLayout::screenLayout);
 
     PointLight::InitShaderAll(Shader::blockShader);
 
-    FramebufferSpecification fbSpec = {
-        screenWidth, screenHeight, GL_RGB, GL_COLOR_ATTACHMENT0
+    FramebufferSpecification cbSpec = {
+        screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_COLOR_ATTACHMENT0, GL_FLOAT
+    };
+    FramebufferSpecification dbSpec = {
+        shadowWidth, shadowHeight, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT, GL_FLOAT
     };
 
-    Framebuffer framebuffer(fbSpec);
-
+    Framebuffer framebuffer(cbSpec);
+    
     framebuffer.AddRenderBuffer(GL_DEPTH24_STENCIL8, GL_DEPTH_ATTACHMENT);
+    Framebuffer depthBuffer(dbSpec);
 
 
     float accumulator = 0.0f;
@@ -269,11 +292,13 @@ void loop(GLFWwindow* window)
     Shader::blockShader.use();
     Shader::blockShader.setInt("uChunkSize", CHUNK_SIZE);
 
-    Shader::blockShader.setVec3("dirLight.ambient", glm::vec3(0.5, 0.5, 0.5));
-    Shader::blockShader.setVec3("dirLight.diffuse", glm::vec3(0.5, 0.5, 0.5));
+    Shader::blockShader.setVec3("dirLight.ambient", glm::vec3(0.1, 0.1, 0.1));
+    Shader::blockShader.setVec3("dirLight.diffuse", glm::vec3(1.0, 1.0, 1.0));
     Shader::blockShader.setVec3("dirLight.specular", glm::vec3(1.0, 1.0, 1.0));
+    Shader::blockShader.setInt("shadowMap", 0);
 
-    const int len = 8;
+    Shader::shadowShader.use();
+    Shader::shadowShader.setInt("uChunkSize", CHUNK_SIZE);
 
     std::vector<Chunk*> chunks;
 
@@ -307,53 +332,138 @@ void loop(GLFWwindow* window)
 
         processInput(window);
 
-        /* PERFORM CALCULATIONS */
+        
+        lightDirection.x = cos(glfwGetTime());
+        lightDirection.y = sin(glfwGetTime());
+        lightDirection.z = cos(glfwGetTime());
+        
+        float light = lightDirection.y * 0.5f + 0.5f;
+
+        glEnable(GL_DEPTH_TEST);
+
+
+        glm::vec3 col = getColor(0x92B4EC);
+        glClearColor(col.x * light, col.y * light, col.z * light, 1.0f);
+
+        float shadow_near_plane = 1.0f, shadow_far_plane = 150.0f;
+
+        glm::mat4 lightProjection = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, shadow_near_plane, shadow_far_plane);
+
+        glm::vec3 lightPos(32.0f, 32.0f, 32.0f);
+        lightPos *= len*0.5;
+
+        glm::mat4 lightView = glm::lookAt(lightPos + normalize(lightDirection)*50.0f,
+            lightPos,
+            glm::vec3(0.0f, 1.0f, 0.0f));
+
+        glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+
+        Shader::shadowShader.use();
+        Shader::shadowShader.setMat4("uLightSpaceMatrix", lightSpaceMatrix);
+
+
+        glViewport(0, 0, shadowWidth, shadowHeight);
+        depthBuffer.Bind();
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glCullFace(GL_FRONT);
+        renderScene(chunkRenderer, chunks, Shader::shadowShader);
+        glCullFace(GL_BACK);
+        depthBuffer.Unbind();
+
+        glViewport(0, 0, screenWidth, screenHeight);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        Shader::blockShader.use();
 
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), screenWidth / screenHeight, 0.1f, 1000.0f);
         glm::mat4 view = Camera::MAIN.getViewMatrix();
+
+        Shader::blockShader.setMat4("uProjection", projection);
+        Shader::blockShader.setMat4("uView", view);
+
+
+        Shader::blockShader.setVec3("uViewPos", Camera::MAIN.m_Position);
+        Shader::blockShader.setVec3("dirLight.direction", lightDirection);
+        Shader::blockShader.setMat4("uLightSpaceMatrix", lightSpaceMatrix);
+        PointLight::UpdateShaderAll(Shader::blockShader, view);
+
+        glActiveTexture(GL_TEXTURE0);
+        depthBuffer.BindTexture();
+        renderScene(chunkRenderer, chunks, Shader::blockShader);
+        /*
+        Shader::screenShader.use();
+        Shader::screenShader.setFloat("exposure", exposure);
+        frameBufferVAO.Bind();
+        glDisable(GL_DEPTH_TEST);
+        glActiveTexture(GL_TEXTURE0);
+        depthBuffer.BindTexture();
+        glDrawArrays(GL_TRIANGLES, 0, 6);*/
+        
+        /* PERFORM CALCULATIONS 
+        float shadow_near_plane = 1.0f, shadow_far_plane = 100.0f;
+
+
+        glm::mat4 projection = glm::perspective(glm::radians(45.0f), screenWidth / screenHeight, 0.1f, 1000.0f);
+        glm::mat4 view       = Camera::MAIN.getViewMatrix();
+
+        glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, shadow_near_plane, shadow_far_plane);
+
+        glm::mat4 lightView = glm::lookAt(-1.0f * 80.0f * lightDirection + Camera::MAIN.m_Position,
+            Camera::MAIN.m_Position,
+            glm::vec3(0.0f, 1.0f, 0.0f));
+
+        glm::mat4 lightSpaceMatrix = lightProjection * lightView;
 
         Shader::blockShader.use();
         Shader::blockShader.setMat4("uProjection", projection);
         Shader::blockShader.setMat4("uView", view);
 
-        Shader::blockShader.setVec3("dirLight.direction", glm::vec3(0.0f, -1.0f, 0.0f));
+        Shader::blockShader.setVec3("dirLight.direction", lightDirection);
         Shader::blockShader.setVec3("uViewPos", Camera::MAIN.m_Position);
+        Shader::blockShader.setMat4("uLightSpaceMatrix", lightSpaceMatrix);
 
+        Shader::shadowShader.use();
+        Shader::shadowShader.setMat4("uLightSpaceMatrix", lightSpaceMatrix);
+
+        /* RENDER SCENE TO SHADOWMAP
+
+
+        glViewport(0, 0, shadowWidth, shadowHeight);
+        depthBuffer.Bind();
+        glClear(GL_DEPTH_BUFFER_BIT);
+
+        renderScene(chunkRenderer, chunks, view, projection, Shader::shadowShader);
+
+        depthBuffer.Unbind();
+
+        glViewport(0, 0, screenWidth, screenHeight);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+         CLEAR SCREEN 
+        Shader::blockShader.use();
+        //glm::vec3 col = getColor(0x92B4EC);
+        //glClearColor(col.x, col.y, col.z, 1.0f);
 
         framebuffer.Bind();
 
-        /* CLEAR SCREEN */
-
-        glm::vec3 col = getColor(0x92B4EC);
-        glClearColor(col.x, col.y, col.z, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glEnable(GL_DEPTH_TEST);
-
-        /* RENDER SCENE */
-         
-
-        PointLight::UpdateShaderAll(Shader::blockShader, view);
-
-        PointLight::DrawLights(view, projection);
-
-        for (int i = 0; i < len * len; i++)
-        {
-            chunkRenderer.Render(chunks[i]->m_RenderData, Shader::blockShader);
-        }
-        //pointLight0.Draw(view, projection, defaultShader);
+         RENDER SCENE TO FRAMEBUFFER 
+        glActiveTexture(GL_TEXTURE0);
+        depthBuffer.BindTexture();
+        renderScene(chunkRenderer, chunks, view, projection, Shader::blockShader);
 
         framebuffer.Unbind();
         
+         RENDER FRAMEBUFFER 
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         Shader::screenShader.use();
+        Shader::screenShader.setFloat("exposure", exposure);
         frameBufferVAO.Bind();
         glDisable(GL_DEPTH_TEST);
+        glActiveTexture(GL_TEXTURE0);
         framebuffer.BindTexture();
         glDrawArrays(GL_TRIANGLES, 0, 6);
-
+        */
         glfwSwapBuffers(window);
         glfwPollEvents();
 

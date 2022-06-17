@@ -127,5 +127,11 @@
     <None Include="postproc.frag">
       <Filter>Resource Files\shaders</Filter>
     </None>
+    <None Include="shadow.vert">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="shadow.frag">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

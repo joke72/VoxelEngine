@@ -3,12 +3,14 @@
 Shader Shader::defaultShader;
 Shader Shader::blockShader;
 Shader Shader::screenShader;
+Shader Shader::shadowShader;
 
 void Shader::InitShaders()
 {
 	Shader::defaultShader = Shader("default.vert", "default.frag");
 	Shader::blockShader = Shader("block.vert", "block.frag");
 	Shader::screenShader = Shader("postproc.vert", "postproc.frag");
+	Shader::shadowShader = Shader("shadow.vert", "shadow.frag");
 }
 
 Shader::Shader()

@@ -22,6 +22,7 @@ public:
 	static Shader defaultShader;
 	static Shader blockShader;
 	static Shader screenShader;
+	static Shader shadowShader;
 
 	static void InitShaders();
 

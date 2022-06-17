@@ -27,8 +27,6 @@ public:
 	int ID;
 	VertexArray m_VAO;
 	VertexBuffer m_VBO;
-	VertexBufferLayout m_Layout;
-
 
 
 	static std::vector<PointLight*> lights;

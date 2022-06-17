@@ -10,10 +10,12 @@ Framebuffer::Framebuffer(FramebufferSpecification specification) :
 	glGenTextures(1, &m_TextureID);
 	glBindTexture(GL_TEXTURE_2D, m_TextureID);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, m_Specification.TextureFormat, m_Specification.Width, m_Specification.Height, 0, m_Specification.TextureFormat, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, m_Specification.InternalTextureFormat, m_Specification.Width, m_Specification.Height, 0, m_Specification.TextureFormat, m_Specification.Type, NULL);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, m_Specification.Attachment, GL_TEXTURE_2D, m_TextureID, 0);
 

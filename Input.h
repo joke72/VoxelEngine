@@ -12,6 +12,8 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+float exposure = 1.0f;
+
 
 void mouseCallback(GLFWwindow* window, double x, double y)
 {
@@ -52,6 +54,11 @@ void processInput(GLFWwindow* window)
         Camera::MAIN.processKeyboard(UP, deltaTime, fast, slow);
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
         Camera::MAIN.processKeyboard(DOWN, deltaTime, fast, slow);
+
+    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+        exposure += 0.01f;
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+        exposure -= 0.01f;
 }
 
 

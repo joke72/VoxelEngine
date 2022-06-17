@@ -3,12 +3,8 @@
 
 ChunkRenderer::ChunkRenderer() :
 	m_ChunkIndices(GenerateIndexArray()),
-	m_IBO(m_ChunkIndices, MAX_INDEX_COUNT * sizeof(GLuint)),
-	m_Layout()
+	m_IBO(m_ChunkIndices, MAX_INDEX_COUNT * sizeof(GLuint))
 {
-	//BlockID, Normal and position
-	m_Layout.AddVertexAttribute(GL_FLOAT, 1);
-
 }
 
 ChunkRenderer::~ChunkRenderer()
@@ -40,7 +36,7 @@ GLuint* ChunkRenderer::GenerateIndexArray()
 }
 
 
-void ChunkRenderer::Render(const ChunkRenderData& chunkData, const Shader& shader)
+void ChunkRenderer::Render(const ChunkRenderData& chunkData, const Shader& shader) const
 {
 	shader.use();
     shader.setVec3("uChunkPosition", chunkData.m_Position);

@@ -3,10 +3,12 @@ layout (location = 0) in int aChunkInfo;
 
 uniform mat4 uView;
 uniform mat4 uProjection;
+uniform mat4 uLightSpaceMatrix;
 uniform vec3 uChunkPosition;
 uniform int  uChunkSize;
 
 out vec3 FragPos;
+out vec4 FragPosLightSpace;
 out vec3 normal;
 out int blockID;
 
@@ -20,8 +22,11 @@ void main()
 
     if(((aChunkInfo >> 21) & 1) == 1)
         normal *= -1;
+        
+	FragPos = aPos;
+    FragPosLightSpace = uLightSpaceMatrix * vec4(aPos, 1.0);
+    
 
     gl_Position = uProjection * uView * vec4(aPos, 1.0);
 
-	FragPos = aPos;
 }

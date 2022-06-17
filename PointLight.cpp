@@ -13,14 +13,9 @@ PointLight::PointLight(glm::vec3 pos, glm::vec3 color, float attenuation) :
 	m_Position(pos),
 	ID(lights.size()),
 	m_VAO(),
-	m_VBO(CUBE_MESH, sizeof(CUBE_MESH), GL_STATIC_DRAW),
-	m_Layout()
+	m_VBO(CUBE_MESH, sizeof(CUBE_MESH), GL_STATIC_DRAW)
 {
-	std::cout << ID << std::endl;
-
-	m_Layout.AddVertexAttribute(GL_FLOAT, 3);
-
-	m_VAO.AddBuffer(m_VBO, m_Layout);
+	m_VAO.AddBuffer(m_VBO, VertexBufferLayout::defaultLayout);
 
 	lights.push_back(this);
 }
@@ -36,12 +31,9 @@ m_Specular(specular),
 m_Position(position),
 ID(lights.size()),
 m_VAO(),
-m_VBO(CUBE_MESH, sizeof(CUBE_MESH), GL_STATIC_DRAW),
-m_Layout()
+m_VBO(CUBE_MESH, sizeof(CUBE_MESH), GL_STATIC_DRAW)
 {
-	m_Layout.AddVertexAttribute(GL_FLOAT, 3);
-
-	m_VAO.AddBuffer(m_VBO, m_Layout);
+	m_VAO.AddBuffer(m_VBO, VertexBufferLayout::defaultLayout);
 
 	lights.push_back(this);
 }

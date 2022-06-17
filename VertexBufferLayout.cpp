@@ -1,7 +1,20 @@
 #pragma once
 #include "VertexBufferLayout.h"
 
+VertexBufferLayout VertexBufferLayout::blockLayout;
+VertexBufferLayout VertexBufferLayout::defaultLayout;
+VertexBufferLayout VertexBufferLayout::screenLayout;
 
+
+void VertexBufferLayout::Init()
+{
+	blockLayout.AddVertexAttribute(GL_FLOAT, 1);
+
+	defaultLayout.AddVertexAttribute(GL_FLOAT, 3);
+
+	screenLayout.AddVertexAttribute(GL_FLOAT, 2);
+	screenLayout.AddVertexAttribute(GL_FLOAT, 2);
+}
 
 void VertexBufferLayout::AddVertexAttribute(unsigned int type, unsigned int count)
 {

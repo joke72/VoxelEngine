@@ -6,7 +6,7 @@ Chunk::Chunk(const glm::vec3& position, const ChunkRenderer& renderer) :
     m_Data(GenerateData()),
 	m_VBO(m_Mesh, MAX_VERTEX_COUNT * sizeof(GLuint), GL_DYNAMIC_DRAW)
 {
-    m_RenderData.m_VAO.AddBuffer(m_VBO, (renderer.m_IBO), renderer.m_Layout);
+    m_RenderData.m_VAO.AddBuffer(m_VBO, (renderer.m_IBO), VertexBufferLayout::blockLayout);
 
     RecalculateMesh();
 

@@ -21,6 +21,11 @@ private:
 
 public:
 
+	static VertexBufferLayout blockLayout;
+	static VertexBufferLayout defaultLayout;
+	static VertexBufferLayout screenLayout;
+
+	static void Init();
 	void AddVertexAttribute(unsigned int type, unsigned int count);
 
 	const std::vector<VertexBufferElement>& GetElements() const;
