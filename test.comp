@@ -1,0 +1,8 @@
+
+
+layout (rgba32f, binding = 6) uniform image2D ssaoTexture;
+
+void main()
+{
+
+}

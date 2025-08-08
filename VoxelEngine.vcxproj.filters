@@ -25,50 +25,65 @@
     <Filter Include="Source Files\utilities">
       <UniqueIdentifier>{d91e3fac-86c0-482b-b425-9648da6fa581}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\textures">
+      <UniqueIdentifier>{564138f4-a8af-4a2e-a4db-fa60c6e5a542}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Game.cpp">
+    <ClCompile Include="glad.c">
+      <Filter>Source Files\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="VertexArray.cpp">
+    <ClCompile Include="IndexBuffer.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderStorageBuffer.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
     <ClCompile Include="VertexBuffer.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
+    <ClCompile Include="VertexArray.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
     <ClCompile Include="VertexBufferLayout.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
-    <ClCompile Include="IndexBuffer.cpp">
+    <ClCompile Include="Texture.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
-    <ClCompile Include="ChunkRenderer.cpp">
-      <Filter>Source Files\graphics</Filter>
+    <ClCompile Include="stb_image.cpp">
+      <Filter>Source Files\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Source Files\world</Filter>
+    </ClCompile>
+    <ClCompile Include="CameraOld.cpp">
+      <Filter>Source Files\world</Filter>
     </ClCompile>
     <ClCompile Include="Chunk.cpp">
       <Filter>Source Files\world</Filter>
     </ClCompile>
-    <ClCompile Include="Shader.cpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="glad.c">
+    <ClCompile Include="Constants.cpp">
       <Filter>Source Files\utilities</Filter>
     </ClCompile>
-    <ClCompile Include="Constants.cpp">
-      <Filter>Source Files\world</Filter>
-    </ClCompile>
-    <ClCompile Include="PointLight.cpp">
-      <Filter>Source Files\world</Filter>
-    </ClCompile>
-    <ClCompile Include="Framebuffer.cpp">
-      <Filter>Source Files\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="Camera.cpp">
-      <Filter>Source Files\graphics</Filter>
+    <ClCompile Include="Octree.cpp">
+      <Filter>Source Files\utilities</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="VertexBufferLayout.h">
+    <ClInclude Include="IndexBuffer.h">
+      <Filter>Source Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderStorageBuffer.h">
+      <Filter>Source Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
       <Filter>Source Files\graphics</Filter>
     </ClInclude>
     <ClInclude Include="VertexArray.h">
@@ -77,61 +92,102 @@
     <ClInclude Include="VertexBuffer.h">
       <Filter>Source Files\graphics</Filter>
     </ClInclude>
-    <ClInclude Include="IndexBuffer.h">
+    <ClInclude Include="VertexBufferLayout.h">
       <Filter>Source Files\graphics</Filter>
     </ClInclude>
-    <ClInclude Include="ChunkRenderer.h">
+    <ClInclude Include="Texture.h">
       <Filter>Source Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="stb_image.h">
+      <Filter>Source Files\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="db_perlin.hpp">
+      <Filter>Source Files\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="ChunkManager.h">
+      <Filter>Source Files\world</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Source Files\world</Filter>
+    </ClInclude>
+    <ClInclude Include="CameraOld.h">
+      <Filter>Source Files\world</Filter>
     </ClInclude>
     <ClInclude Include="Chunk.h">
       <Filter>Source Files\world</Filter>
     </ClInclude>
-    <ClInclude Include="Shader.h">
-      <Filter>Source Files\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="Input.h">
+    <ClInclude Include="Constants.h">
       <Filter>Source Files\utilities</Filter>
     </ClInclude>
-    <ClInclude Include="Constants.h">
-      <Filter>Source Files\world</Filter>
-    </ClInclude>
-    <ClInclude Include="ChunkRenderData.h">
-      <Filter>Source Files\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="PointLight.h">
-      <Filter>Source Files\world</Filter>
-    </ClInclude>
-    <ClInclude Include="Framebuffer.h">
-      <Filter>Source Files\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="Camera.h">
-      <Filter>Source Files\graphics</Filter>
+    <ClInclude Include="Octree.h">
+      <Filter>Source Files\utilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="block.vert">
+    <None Include=".gitattributes">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include=".gitignore">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="VoxelEngine.vcxproj.user">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="sky.vert">
       <Filter>Resource Files\shaders</Filter>
     </None>
-    <None Include="block.frag">
+    <None Include="old_raycompute.comp">
       <Filter>Resource Files\shaders</Filter>
     </None>
-    <None Include="default.vert">
+    <None Include="ray.frag">
       <Filter>Resource Files\shaders</Filter>
     </None>
-    <None Include="default.frag">
+    <None Include="ray.vert">
       <Filter>Resource Files\shaders</Filter>
     </None>
-    <None Include="postproc.vert">
+    <None Include="raycol.comp">
       <Filter>Resource Files\shaders</Filter>
     </None>
-    <None Include="postproc.frag">
+    <None Include="raylighting.comp">
       <Filter>Resource Files\shaders</Filter>
     </None>
-    <None Include="shadow.vert">
+    <None Include="rayssao.comp">
       <Filter>Resource Files\shaders</Filter>
     </None>
-    <None Include="shadow.frag">
+    <None Include="rayvoxel.frag">
       <Filter>Resource Files\shaders</Filter>
     </None>
+    <None Include="screenquad.frag">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="screenquad.vert">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="shit.comp">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="sky.frag">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="test.comp">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="spritesheetsmall.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="grass.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="spritesheet.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="spritesheet_ugly.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="tiles.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
   </ItemGroup>
 </Project>

@@ -16,9 +16,9 @@ void VertexBufferLayout::Init()
 	screenLayout.AddVertexAttribute(GL_FLOAT, 2);
 }
 
-void VertexBufferLayout::AddVertexAttribute(unsigned int type, unsigned int count)
+void VertexBufferLayout::AddVertexAttribute(unsigned int type, unsigned int count, bool instance)
 {
-	m_Elements.push_back({ type, count, GL_FALSE });
+	m_Elements.push_back({ type, count, GL_FALSE, instance });
 	m_Stride += GetTypeSize(type) * count;
 }
 

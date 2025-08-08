@@ -1,44 +1,59 @@
 #pragma once
-#include <iostream>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include "Constants.h"
-#include "ChunkRenderer.h"
-#include "ChunkRenderData.h"
-#include "VertexArray.h"
-
 
 
 class Chunk
 {
-private:
-
-	static const GLuint MAX_VERTEX_COUNT = CHUNK_VOLUME * 24;
-
-
-	void AddBlock(GLint blockPosition);
-	void AddFace(GLuint faceIndex, GLuint blockData);
-	GLuint GetBlock(int x, int y, int z);
 public:
-	ChunkRenderData m_RenderData;
-	/*
-	glm::vec3 m_Position;
-	GLuint m_IndexCount;
-	*/
-	GLuint* m_Mesh;
-	GLuint* m_Data;
+	uint32_t* m_ChunkData;
+	glm::ivec3 m_ChunkPosition;
+	bool rendered = false;
+	
+	Chunk(glm::ivec3 pos = glm::ivec3(0, 0, 0)) : m_ChunkData(new uint32_t[CHUNK_VOLUME]), m_ChunkPosition(pos)
+	{
+		/*
+		for (int x = 0; x < CHUNK_SIZE; x++)
+		{
+			for (int y = 0; y < CHUNK_HEIGHT; y++)
+			{
+				for (int z = 0; z < CHUNK_SIZE; z++)
+				{
+					int r = rand();
+					if (y < 4 * sin(x * 0.2) + 4 * cos(z * 0.2) + m_ChunkPosition.x)
+						m_ChunkData[x + y * CHUNK_SIZE + z * CHUNK_SIZE * CHUNK_HEIGHT] = r < 15000 ? 1 : 2;
+					else
+						m_ChunkData[x + y * CHUNK_SIZE + z * CHUNK_SIZE * CHUNK_HEIGHT] = 0;
+				}
+			}
+		}*/
 
-	VertexBuffer m_VBO;
+		for (int i = 0; i < CHUNK_VOLUME; i++)
+			m_ChunkData[i] = 0;
+		/*
+		for (int x = 0; x < CHUNK_SIZE; x++)
+		{
+			for (int y = 0; y < CHUNK_HEIGHT; y++)
+			{
+				for (int z = 0; z < CHUNK_SIZE; z++)
+				{
+					int r = rand();
+					if (y < db::perlin(0.01 * (x + m_ChunkPosition.x * CHUNK_SIZE), 0.01 * (z + m_ChunkPosition.z * CHUNK_SIZE))*50 + 10)
+						m_ChunkData[x + y * CHUNK_SIZE + z * CHUNK_SIZE * CHUNK_HEIGHT] = r < 15000 ? 1 : 2;
+				}
+			}
+		}*/
 
-	GLuint m_VertexCount;
 
-	GLuint* GenerateData();
-	GLuint* GenerateMesh();
-	void RecalculateMesh();
+		//std::cout << "Chunk created" << std::endl;
+	}
 
-	Chunk(const glm::vec3& position, const ChunkRenderer& renderer);
-	~Chunk();
+	~Chunk()
+	{
+		delete[] m_ChunkData;
+		//std::cout << "Chunk destroyed" << std::endl;
+	}
 
 };
 

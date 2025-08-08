@@ -68,6 +68,39 @@ void Shader::compileShaders(const char* vShaderCode, const char* fShaderCode)
 	glDeleteShader(fragment);
 }
 
+void Shader::CompileComputeShader(const char* cShaderCode)
+{
+	unsigned int compute;
+	int success;
+	char infoLog[512];
+
+	compute = glCreateShader(GL_COMPUTE_SHADER);
+
+	glShaderSource(compute, 1, &cShaderCode, NULL);
+	glCompileShader(compute);
+	glGetShaderiv(compute, GL_COMPILE_STATUS, &success);
+
+	if (!success)
+	{
+		glGetShaderInfoLog(compute, 512, NULL, infoLog);
+		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+	}
+
+	memset(infoLog, 0, 512);
+
+	ID = glCreateProgram();
+	glAttachShader(ID, compute);
+	glLinkProgram(ID);
+
+	glGetProgramiv(ID, GL_LINK_STATUS, &success);
+	if (!success)
+	{
+		glGetProgramInfoLog(ID, 512, NULL, infoLog);
+		std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+	}
+
+	glDeleteShader(compute);
+}
 void Shader::compileShaders(const char* vShaderCode, const char* fShaderCode, const char* gShaderCode)
 {
 	unsigned int vertex, fragment, geometry;
@@ -132,6 +165,32 @@ void Shader::compileShaders(const char* vShaderCode, const char* fShaderCode, co
 	glDeleteShader(fragment);
 }
 
+Shader::Shader(const char* computeShaderPath)
+{
+	std::string computeCode;
+	std::ifstream cShaderFile;
+
+	cShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+	try
+	{
+		cShaderFile.open(computeShaderPath);
+		std::stringstream cShaderStream;
+
+		cShaderStream << cShaderFile.rdbuf();
+
+		cShaderFile.close();
+
+		computeCode = cShaderStream.str();
+
+	}
+	catch (std::ifstream::failure e)
+	{
+		std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
+	}
+	const char* cShaderCode = computeCode.c_str();
+
+	CompileComputeShader(cShaderCode);
+}
 
 Shader::Shader(const char* vertexPath, const char* fragmentPath)
 {
@@ -229,6 +288,10 @@ void Shader::setVec3f(const std::string name, const float& x, const float& y, co
 	glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, glm::value_ptr(value));
 }
 
+void Shader::setVec2(const std::string name, const glm::vec2& value) const
+{
+	glUniform2fv(glGetUniformLocation(ID, name.c_str()), 1, glm::value_ptr(value));
+}
 void Shader::setVec3(const std::string name, const glm::vec3& value) const
 {
 	glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, glm::value_ptr(value));
@@ -246,3 +309,14 @@ void Shader::setFloat(const std::string name, const float& value) const
 {
 	glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
 }
+
+void Shader::setFloatArray(const std::string name, const float* value, int32_t size) const
+{
+	glUniform1fv(glGetUniformLocation(ID, name.c_str()), size, value);
+}
+
+void Shader::setIntArray(const std::string name, const int32_t* value, int32_t size) const
+{
+	glUniform1iv(glGetUniformLocation(ID, name.c_str()), size, value);
+}
+

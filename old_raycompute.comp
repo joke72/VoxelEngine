@@ -1,0 +1,543 @@
+#version 460 core
+
+layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+
+
+uniform vec2 uScreenSize;
+
+uniform vec3 uCameraPosition;
+uniform vec3 uCameraFront;
+
+uniform vec3 uLightPosition;
+
+uniform float uFOV;
+
+uniform vec3  uSpherePosition;
+uniform float uSphereRadius;
+uniform vec3 uChunkPosition;
+
+const int uChunkSize = 256;
+uniform sampler2D tex;
+
+uniform float uXAngle;
+uniform float uYAngle;
+
+uniform int uChunk[uChunkSize * uChunkSize * uChunkSize];
+
+#define RENDER_DISTANCE 500.0
+
+
+layout (binding = 0) buffer data
+{
+	int blocks[uChunkSize * uChunkSize * uChunkSize];
+};
+layout (rgba32f, binding = 1) uniform image2D imgOutput;
+
+struct hit {
+	ivec3 pos;
+	vec3 normal;
+	bool didHit;
+	float dist;
+	int voxelID;
+};
+
+//int[64] chunk = int[64](1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1,  1, 1, 0, 1, 1, 1, 1, 1, 1, 1);
+
+
+vec3 voxelCol(ivec3 voxelPos)
+{
+	vec3 col = vec3(0);
+	int i = voxelPos.x + voxelPos.y * uChunkSize + voxelPos.z * uChunkSize * uChunkSize;
+	if(voxelPos.x < 0 || voxelPos.x >= uChunkSize || voxelPos.y < 0 || voxelPos.y >= uChunkSize || voxelPos.z < 0 || voxelPos.z >= uChunkSize)
+		return col;
+
+	if(uChunk[i] == 1){
+		col = vec3(0.8, 0.2, 0.2);
+	}
+	return col;
+}
+int getVoxel(ivec3 voxelPos)
+{
+	voxelPos -= ivec3(uChunkPosition * uChunkSize);
+	int i = voxelPos.x + voxelPos.y * uChunkSize + voxelPos.z * 16 * uChunkSize;
+	if(voxelPos.x < 0 || voxelPos.x >= uChunkSize || voxelPos.y < 0 || voxelPos.y >= 16 || voxelPos.z < 0 || voxelPos.z >= uChunkSize)
+		return 0;
+/*
+int size = 256*8;
+if(voxelPos.y < 10 + sin(voxelPos.x) + cos(voxelPos.z))
+	return (voxelPos.x > 0 && voxelPos.x < size && voxelPos.y > 0 && voxelPos.y < 12 && voxelPos.z > 0 && voxelPos.z < size) ? 1 : 0;*/
+	return blocks[i];
+}
+
+hit ray(vec3 origin, vec3 dir);
+/*
+vec3 lighting(vec3 norm, vec3 pos, vec3 rd, vec3 col) {
+    vec3 lightDir = normalize(vec3(5, 10, 5));
+    float diffuseAttn = max(dot(norm, lightDir), 0.0);
+    vec3 light = vec3(1.0,0.9,0.9);
+    
+    vec3 ambient = vec3(0.2, 0.2, 0.3);
+    
+    vec3 reflected = reflect(rd, norm);
+    float specularAttn = max(dot(reflected, lightDir), 0.0);
+    
+    return col*(diffuseAttn*light*1.0 + specularAttn*light*0.6 + ambient);
+}*/
+hit ray(vec3 origin, vec3 dir)
+{
+	hit result = {ivec3(0), vec3(0), false, 0.0, 0};
+
+
+	float maxDistance = dir.length;
+	dir = dir / maxDistance;
+	
+	result.pos = ivec3(floor(origin));
+	ivec3 lastPos = result.pos;
+	
+	vec3 hop = sign(dir);
+	ivec3 ihop = ivec3(hop);
+
+	vec3 delta = hop / dir;
+	
+	vec3 fr = fract(origin);
+	
+	if(isnan(delta.x) || isinf(delta.x)) delta.x = 1000000;
+	if(isnan(delta.y) || isinf(delta.y)) delta.y = 1000000;
+	if(isnan(delta.z) || isinf(delta.z)) delta.z = 1000000;
+	
+	vec3 tMax;
+
+	tMax.x = delta.x * ((dir.x > 0) ? (1.0 - fr.x) : fr.x);
+	tMax.y = delta.y * ((dir.y > 0) ? (1.0 - fr.y) : fr.y);
+	tMax.z = delta.z * ((dir.z > 0) ? (1.0 - fr.z) : fr.z);
+
+	result.dist = 0.0;
+
+	while(result.dist < maxDistance)
+	{
+		result.voxelID = getVoxel(result.pos);
+		if(result.voxelID != 0) {
+			result.normal = lastPos - result.pos;
+			result.didHit = true;
+			return result;
+		}
+
+		lastPos = result.pos;
+
+		if(tMax.x < tMax.y) {
+			if(tMax.z < tMax.x) {
+				result.dist = tMax.z;
+				result.pos.z += ihop.z;
+				tMax.z += delta.z;
+			} else {
+				result.dist = tMax.x;
+				result.pos.x += ihop.x;
+				tMax.x += delta.x;
+			}
+		} else {
+			if(tMax.z < tMax.y) {
+				result.dist = tMax.z;
+				result.pos.z += ihop.z;
+				tMax.z += delta.z;
+			} else {
+				result.dist = tMax.y;
+				result.pos.y += ihop.y;
+				tMax.y += delta.y;
+			}
+		}
+	}
+
+	return hit(ivec3(0), vec3(0, 0, 0), false, maxDistance, 0);
+}
+
+hit ray(vec3 origin, vec3 dir, float maxDistance)
+{
+	return ray(origin, normalize(dir) * maxDistance);
+}
+
+void old()
+{
+/*
+
+hit ray_old(vec3 origin, vec3 dir)
+{
+	dir = normalize(dir);
+	vec3 voxelPos = floor(origin);
+
+	vec3 incr = sign(dir);
+
+	vec3 delta = incr / dir;
+
+	vec3 tMax = vec3(0);
+	
+	vec3 fr = fract(origin);
+
+	tMax.x = delta.x * ((dir.x > 0) ? (1.0 - fr.x) : fr.x);
+	tMax.y = delta.y * ((dir.y > 0) ? (1.0 - fr.y) : fr.y);
+	tMax.z = delta.z * ((dir.z > 0) ? (1.0 - fr.z) : fr.z);
+
+	int maxTraces = 100;
+    vec3 norm; 
+
+	for(int i = 0; i < maxTraces; i++)
+	{
+		hit inter = getVoxel(ivec3(voxelPos));
+		if(inter.didHit) {
+			inter.pos = voxelPos;//lighting(norm, voxelPos, dir, inter.col);
+			inter.norm = norm;
+			return inter;
+		}
+		if(tMax.x < tMax.y) {
+			if(tMax.z < tMax.x) {
+				voxelPos.z += incr.z;
+				tMax.z += delta.z;
+                norm = vec3(0, 0,-incr.z);
+			} else {
+				voxelPos.x += incr.x;
+				tMax.x += delta.x;
+                norm = vec3(-incr.x, 0, 0);
+			}
+		} else {
+			if(tMax.z < tMax.y) {
+				voxelPos.z += incr.z;
+				tMax.z += delta.z;
+                norm = vec3(0, 0, -incr.z);
+			} else {
+				voxelPos.y += incr.y;
+				tMax.y += delta.y;
+                norm = vec3(0, -incr.y, 0);
+			}
+		}
+
+	}
+	return hit(vec3(0, 0, 0), vec3(0, 0, 0), false, 0.0);
+}
+
+hit slowRay(vec3 origin, vec3 dir)
+{
+	dir = normalize(dir);
+	
+	int maxTraces = 1000;
+
+	for(int i = 0; i < maxTraces; i++)
+	{
+		hit inter = intersect(ivec3(origin));
+		if(inter.didHit) {
+			inter.pos = origin;//lighting(norm, voxelPos, dir, inter.col);
+			inter.norm = vec3(0);
+			return inter;
+		}
+		origin += dir * 0.01;
+
+	}
+	return hit(vec3(0, 0, 0), vec3(0, 0, 0), false);
+}
+*/
+}
+
+bool raycastVoxel(vec3 ro, vec3 rd, out ivec3 pos, out ivec3 nor, out int index, out float d) {
+    float maxdist = length(rd);
+    
+    rd /= maxdist;
+
+    pos = ivec3(floor(ro));
+    ivec3 ppos = pos;
+
+    vec3 s = sign(rd);
+    ivec3 is = ivec3(s);
+
+    vec3 td = s / rd;
+
+    if(isnan(td.x) || isinf(td.x)) td.x = 1e10;
+    if(isnan(td.y) || isinf(td.y)) td.y = 1e10;
+    if(isnan(td.z) || isinf(td.z)) td.z = 1e10;
+    
+    vec3 tm;
+    
+    if(s.x > 0.0) tm.x = td.x * ((1.0 - ro.x) + floor(ro.x)); else tm.x = td.x * fract(ro.x);
+    if(s.y > 0.0) tm.y = td.y * ((1.0 - ro.y) + floor(ro.y)); else tm.y = td.y * fract(ro.y);
+    if(s.z > 0.0) tm.z = td.z * ((1.0 - ro.z) + floor(ro.z)); else tm.z = td.z * fract(ro.z);
+
+    d = 0.0;
+
+    while(true) {
+        if(d > maxdist) break;
+
+        index = getVoxel(pos);
+
+        if(index != 0) {
+            nor = ppos - pos;
+            return true;
+        }
+
+        ppos = pos;
+    
+        if(tm.x < tm.y) {
+            if(tm.x < tm.z) {
+                d = tm.x;
+                pos.x += is.x;
+                tm.x += td.x;
+            }
+            else {
+                d = tm.z;
+                pos.z += is.z;
+                tm.z += td.z;
+            }
+        }
+        else {
+            if(tm.y < tm.z) {
+                d = tm.y;
+                pos.y += is.y;
+                tm.y += td.y;
+            }
+            else {
+                d = tm.z;
+                pos.z += is.z;
+                tm.z += td.z;
+            }
+        }
+    }
+    pos = ivec3(floor(ro));
+    nor = ivec3(0, 0, 0);
+    index = 0;
+    d = maxdist;
+    return false;
+}
+float rand(vec2 co){
+    return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+vec3 CalcDirLight(vec3 point, vec3 normal, vec3 viewDir2, vec3 textureColor)
+{
+    vec3 worldUp = vec3(0,1,0);
+    //vec3 viewDir = normalize(-FragPos);
+    vec3 lightDir = normalize(vec3(uXAngle, uYAngle, 0.0));
+	/*
+			vec3 normalRight;
+			vec3 normalUp;
+
+			if(abs(normal.y) > 0.5)
+			{
+				normalRight = vec3(1, 0, 0);
+				normalUp = vec3(0, 0, 1);
+			}
+			else
+			{
+				normalRight = -normalize(cross(normal, worldUp));
+				normalUp = cross(normalRight, normal);			
+			}
+
+			ivec3 garbage;
+			float ao = 0;
+			float oDist;
+			ivec3 garbage2;
+			int garbage3;
+
+			float sampleWidth = 9;
+			float mDistance = 0;
+			
+			for(int x = -1; x < 2; x++)
+			{
+				for(int y = -1; y < 2; y++)
+				{	
+					vec3 aoDir = normal + normalRight * x + normalUp * y;
+					bool aoHit = raycastVoxel(point + normal*0.001, normalize(aoDir) * 20.0, garbage, garbage2, garbage3, oDist);
+					if(aoHit) {
+						float dMin = 2.0;
+						ao += 0.1/oDist;//oDist / dMin * abs(dot(normalize(normal), aoDir));
+						mDistance += oDist;
+					}
+				}
+			}
+			ao /= 9;
+			mDistance /= 9;
+
+			ao = 1 - ao;
+			*/
+	vec3 viewDir = normalize(uCameraPosition - point);
+
+	vec3 ambientCol = vec3(0.2);// * (uYAngle * 0.6 + 0.4 + 0.3);
+	vec3 diffuseCol = vec3(0.6, 0.6, 0.6);
+	vec3 specularCol = vec3(1.0);
+	
+
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    
+    float diff = max(dot(normal, lightDir), 0.0);
+    
+    vec3 reflectDir = reflect(-lightDir, normal);
+    
+    float spec;
+    float shininess = 32.0;
+
+    spec = pow(max(dot(normal, halfwayDir), 0.0), shininess*2);
+
+    
+    vec3 ambient = ambientCol * diffuseCol * textureColor *0.4*(normal*0.5+0.5).y;
+    vec3 diffuse = diffuseCol   * diff * textureColor;
+    vec3 specular = specularCol * spec * 0.0;
+	
+
+    ivec3 shadow_vp, shadow_vn; int shadow_index; float shadow_d;
+    bool shadow_hit = raycastVoxel(point + (normal * 0.001), lightDir * RENDER_DISTANCE, shadow_vp, shadow_vn, shadow_index, shadow_d);
+
+	float shadow = shadow_hit ? 0.0 : 1.0;
+	vec3 result = ambient + (shadow) * (diffuse + specular);
+    return result;
+
+
+}
+
+vec3 light(vec3 p, vec3 n) {
+    vec3 l = vec3(0.2, 0.2, 0.2); // Ambient
+    
+    vec3 currDir = normalize(vec3(1.0, 1.0, 1.0));
+    
+    ivec3 shadow_vp, shadow_vn; int shadow_index; float shadow_d;
+    bool shadow_hit = raycastVoxel(p + (n * 0.001), currDir * RENDER_DISTANCE, shadow_vp, shadow_vn, shadow_index, shadow_d);
+
+
+
+
+    l += 1.5 * vec3(1.0, 0.95, 0.9) * clamp(dot(n, currDir), 0, 1) * (shadow_hit ? 0.0 : 1.0); // Directional
+    
+    return l;
+}
+
+vec3 lighting(vec3 point, vec3 normal)
+{
+	vec3 light = vec3(0.2, 0.2, 0.2);
+	
+    vec3 currentDir = normalize(vec3(1.0, 0.4, 1.0));
+
+	hit shadowHit = ray(point + normal*0.001, currentDir * RENDER_DISTANCE);
+	
+	light += 1.5 * vec3(1.0, 0.95, 0.9) * clamp(dot(normal, currentDir), 0, 1) * (shadowHit.didHit ? 0.0 : 1.0);
+
+	return light;
+}
+
+vec2 getTexCoord(vec3 point, ivec3 normal)
+{
+	vec3 facePos = fract(point);
+	
+	if(normal.x < 0)
+	{
+		return facePos.zy;
+	}
+	else if(normal.x > 0)
+	{
+		return vec2(1-facePos.z, facePos.y);
+	}
+	else if(normal.y > 0)
+	{
+		return vec2(1-facePos.x, facePos.z);
+	}
+	else if(normal.y < 0)
+	{
+		return facePos.xz;
+	}
+	if(normal.z > 0)
+	{
+		return facePos.xy;
+	}
+	else if(normal.z < 0)
+	{
+		return vec2(1-facePos.x, facePos.y);
+	}
+	return vec2(0);
+}
+
+void main()
+{
+	
+	
+	// Pixel position in screen space, x = [-1, 1], y = [-1, 1]
+	vec2 screenPos = (gl_GlobalInvocationID.xy / uScreenSize) * 2 - 1;
+    ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
+	
+    //vec3 uCameraPosition = vec3(30, 10, 30);
+    vec3 worldUp = vec3(0,1,0);
+    vec3 lookAt = uCameraFront;
+    vec3 camDir = normalize(uCameraFront);//normalize(lookAt - uCameraPosition);
+    vec3 camRight = normalize(cross(camDir, worldUp));
+    vec3 camUp = cross(camRight, camDir);
+    
+    vec3 filmCentre = uCameraPosition + camDir*1.0;
+    vec2 filmSize = vec2(1,uScreenSize.y / uScreenSize.x);
+    
+    vec3 filmPos = filmCentre + screenPos.x*filmSize.x*camRight + screenPos.y*filmSize.y*camUp;
+    vec3 ro = uCameraPosition;
+    vec3 rd = normalize(filmPos - uCameraPosition);
+		
+	ivec3 oPos;
+	ivec3 oNor;
+	int oIndex;
+	float oDist;
+
+	bool wasHit = raycastVoxel(ro, rd * RENDER_DISTANCE, oPos, oNor, oIndex, oDist);
+	
+	vec3 point = ro + (rd * oDist);
+	/*
+	vec3 newVec = reflect(rd, vec3(oNor));
+	vec3 point2 = ro + (rd * oDist);
+	if(oIndex == 255) {
+		wasHit = raycastVoxel(point2 + oNor*0.001, newVec * RENDER_DISTANCE, oPos, oNor, oIndex, oDist);
+		point = point2 + oNor*0.001 + newVec * oDist;
+	}*/
+	vec4 color = vec4(0);
+	 
+	if(wasHit) { 
+		vec3 normal = vec3(oNor);
+
+		if(oIndex != 0) {
+			//color = texture(tex, getTexCoord(point, oNor));
+			vec2 texCoords = getTexCoord(point, oNor);
+
+			vec2 distV     = texCoords * 2.0 - 1.0;
+			float maxDist  = max(abs(distV.x), abs(distV.y));
+			float circular = length(distV);
+			float square   = maxDist;
+			
+			vec2 yOffset = vec2(0.0, 15.0);
+			vec2 texturePos = vec2((oIndex-1) % 16, (oIndex-1) / 16);
+			vec2 tilesInTexture = vec2(16, 16);
+
+			
+			vec3 textureColor = vec3(texture(tex, (((texCoords) + yOffset + texturePos) / tilesInTexture)));
+
+			//vec2 texture_size = vec2(288, 288);
+			//texCoords = (yOffset + texCoords + texturePos) * 16 / texture_size;//((texCoords + yOffset + texturePos) / tilesInTexture);// + vec2(0.00347222);
+
+
+			float fog = 0;//oDist / 100.0;
+			color = vec4(CalcDirLight(point, normal, camDir, textureColor), 1-fog);
+			
+			//color = mix(color, vec4(0.0, 0.0, 0.0, 1.0), ao);//vec4(vec3(ao), 1.0);//
+		    //color = vec4(mix(color, color* 0.8 + 0.2 * vec4(0.0, 0.0, 0.0, 0.0), mix(circular,square,maxDist)));
+		}
+		
+		//color *= vec4(light(point, normal), 1);
+		
+    vec4 value = vec4(0.0, 0.0, 0.0, 1.0);
+	
+    value.x = float(texelCoord.x)/(gl_NumWorkGroups.x);
+    value.y = float(texelCoord.y)/(gl_NumWorkGroups.y);
+	
+    
+	vec4 col1 = vec4(0.2, 0.5, 0.6, 1.0);
+	vec4 col2 = vec4(0.7, 0.5, 0.1, 1.0);
+
+		//FragColor = vec4(color);
+	    //float gamma = 1.0;
+	    //FragColor = vec4(pow(color.rgb, vec3(1.0/gamma)), 1.0);
+		//gl_FragDepth = oDist / RENDER_DISTANCE;
+	} else {
+		//gl_FragDepth = 1;
+		//discard;
+		//FragColor = vec4(0.55, 0.6, 0.65, 0.0);
+	}
+	imageStore(imgOutput, texelCoord, color);
+
+
+}

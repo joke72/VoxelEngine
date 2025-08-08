@@ -9,6 +9,7 @@ struct VertexBufferElement
 	unsigned int type;
 	unsigned int count;
 	unsigned char normalized;
+	bool instance;
 };
 
 
@@ -26,7 +27,7 @@ public:
 	static VertexBufferLayout screenLayout;
 
 	static void Init();
-	void AddVertexAttribute(unsigned int type, unsigned int count);
+	void AddVertexAttribute(unsigned int type, unsigned int count, bool instance = false);
 
 	const std::vector<VertexBufferElement>& GetElements() const;
 

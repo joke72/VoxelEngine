@@ -30,6 +30,38 @@ void VertexArray::AddBuffer(const VertexBuffer& vbo, const VertexBufferLayout& l
 	}
 }
 
+
+void VertexArray::AddBuffer(const VertexBuffer& vbo, const VertexBuffer& instanceVBO, const VertexBufferLayout& layout)
+{
+	Bind();
+
+	std::vector<VertexBufferElement> elements = layout.GetElements();
+
+	int offset = 0;
+	for (int i = 0; i < elements.size(); i++)
+	{
+
+		const auto& element = elements[i];
+		if(!element.instance)
+		{
+			vbo.Bind();
+		}
+		else
+		{
+			instanceVBO.Bind();
+		}
+		
+		glEnableVertexAttribArray(i);
+		glVertexAttribPointer(i, element.count, element.type, element.normalized, layout.GetStride(), (void*)offset);
+		offset += element.count * VertexBufferLayout::GetTypeSize(element.type);
+		if (element.instance)
+		{
+			instanceVBO.Unbind();
+			glVertexAttribDivisor(i, 1);
+		}
+	}
+}
+
 void VertexArray::AddBuffer(const VertexBuffer& vbo, const IndexBuffer& ibo, const VertexBufferLayout& layout)
 {
 	Bind();

@@ -1,3 +1,5 @@
+/*
+
 #pragma once
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -12,7 +14,7 @@ enum CameraMovement {
 	DOWN
 };
 
-class Camera
+class CameraRTS
 {
 
 public:
@@ -20,7 +22,6 @@ public:
 	glm::vec3 m_Up = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec3 m_Front = glm::vec3(0.0f, 0.0f, -1.0f);
 	glm::vec3 m_Right = glm::vec3(1.0f, 0.0f, 0.0f);
-	glm::vec3 m_LookAtPoint;
 
 	const glm::vec3 WORLDUP = glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -29,20 +30,16 @@ public:
 	float m_Yaw, m_Pitch;
 	float m_Sensitivity;
 	float m_MovementSpeed;
-	float m_Zoom = 10.0f;
-
-	bool right = false;
-	bool middle = false;
 
 public:
 
-	static Camera MAIN;
+	static CameraRTS MAIN;
 
 	glm::vec3 m_Position;
 
-	Camera();
+	CameraRTS();
 
-	Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch);
+	CameraRTS(glm::vec3 position, glm::vec3 up, float yaw, float pitch);
 
 	glm::mat4 getViewMatrix();
 
@@ -55,6 +52,6 @@ public:
 	void moveRight(float dx, float deltaTime);
 
 	void rotate(float y, float p, float deltaTime);
-	void Zoom(float dy, float deltaTime);
 };
 
+*/

@@ -1,0 +1,92 @@
+#version 460 core
+
+layout (local_size_x = 30, local_size_y = 30, local_size_z = 1) in;
+
+uniform vec3 uSamples[64];
+
+layout (rgba32f, binding = 1) uniform image2D colInput;
+layout (rgba32f, binding = 2) uniform image2D posInput;
+layout (rgba32f, binding = 3) uniform image2D normHitInput;
+
+layout (rgba32f, binding = 4) uniform image2D imgOutput;
+layout (rgba32f, binding = 5) uniform image2D noiseTexture;
+layout (rgba32f, binding = 6) uniform image2D ssaoTexture;
+
+
+uniform vec2 uScreenSize;
+
+uniform vec3 uCameraPosition;
+uniform vec3 uCameraFront;
+uniform vec3 uCameraRight;
+uniform vec3 uCameraUp;
+
+
+
+
+
+void main()
+{
+	// Pixel position in screen space, x = [-1, 1], y = [-1, 1]
+    ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
+	//vec2 screenPos = (texelCoord / uScreenSize) * 2 - 1;
+	
+    
+    const vec2 noiseScale = vec2(1.0)/4.0; // screen = 800x600
+    vec4 color     = imageLoad(colInput, texelCoord);
+    vec4 dirDist   = imageLoad(posInput, texelCoord);
+    vec4 normHit   = imageLoad(normHitInput, texelCoord);
+    vec3 randomVec = imageLoad(noiseTexture, ivec2(texelCoord * noiseScale / uScreenSize)).xyz;
+
+    vec3 dir = dirDist.xyz;
+    float dist = dirDist.w;
+    
+    vec3 pos = uCameraPosition + dir * dist;
+
+    vec3 tangent   = normalize(randomVec - normHit.xyz * dot(randomVec, normHit.xyz));
+    vec3 bitangent = cross(normHit.xyz, tangent);
+    mat3 TBN       = mat3(tangent, bitangent, normHit.xyz); 
+    
+    vec2 filmSize = vec2(1, uScreenSize.y / uScreenSize.x);
+    
+    //vec3 filmPos = filmCentre + screenPos.x*filmSize.x*uCameraRight + screenPos.y*filmSize.y*uCameraUp;
+    
+    
+    float occlusion = 0.0;
+
+    if(normHit.w > 0.2)
+    {
+        float sampleDepth = 0.0f;
+        float radius = 1.0;
+        int kernelSize = 64;
+        for(int i = 0; i < kernelSize; i++)
+        {
+            // get sample position
+            vec3 samplePos = TBN * uSamples[i]; // from tangent to world-space
+            samplePos = pos + samplePos * radius;
+            vec3 ray = (samplePos - uCameraPosition);
+        
+            float samplePosZ = length(ray);
+            ray /= samplePosZ;
+
+            float t =  1 / dot(ray, uCameraFront);
+        
+            vec3 screenPoint = t * ray;
+
+            mat3 TBN2 = transpose(mat3(normalize(uCameraRight), normalize(uCameraUp), normalize(uCameraFront)));
+
+            vec3 temp = (TBN2 * screenPoint) / vec3(filmSize, 1.0);
+            sampleDepth = imageLoad(posInput, ivec2(uScreenSize * (temp.xy + 1) * 0.5)).w;
+            float bias = 0.025;
+           
+            float rangeCheck = smoothstep(0.0, 1.0, radius / abs(samplePosZ - sampleDepth));
+            occlusion += (sampleDepth >= samplePosZ + bias ? 1.0 : 0.0) * rangeCheck; 
+        } 
+        occlusion = (occlusion / kernelSize);
+
+    }
+
+	imageStore(ssaoTexture, texelCoord, vec4(occlusion));
+    
+
+    
+}

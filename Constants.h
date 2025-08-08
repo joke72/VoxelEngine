@@ -1,10 +1,15 @@
 #pragma once
+#include <iostream>
 
-const int CHUNK_SIZE   = 32;
-const int CHUNK_AREA   = CHUNK_SIZE * CHUNK_SIZE;
-const int CHUNK_VOLUME = CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE;
+const int32_t CHUNK_SIZE = 128;
+const int32_t CHUNK_HEIGHT = 128;
 
+const int32_t CHUNKS_X = 8;
+const int32_t CHUNKS_Y = 1;
+const int32_t CHUNKS_Z = 8;
 
-extern unsigned int BLOCK_MESH[24];
+const int32_t CHUNKS = CHUNKS_X * CHUNKS_Y * CHUNKS_Z;
 
-extern float CUBE_MESH[36*3];
+const int32_t CHUNK_VOLUME = CHUNK_SIZE * CHUNK_SIZE * CHUNK_HEIGHT;
+
+const int32_t ARRAY_SIZE = CHUNK_VOLUME * CHUNKS + CHUNKS;

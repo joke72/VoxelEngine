@@ -21,6 +21,7 @@ public:
 
 	void AddBuffer(const VertexBuffer& vbo, const VertexBufferLayout& layout);
 	void AddBuffer(const VertexBuffer& vbo, const IndexBuffer& ibo, const VertexBufferLayout& layout);
+	void AddBuffer(const VertexBuffer& vbo, const VertexBuffer& instanceVBO, const VertexBufferLayout& layout);
 
 
 	void Bind() const;
