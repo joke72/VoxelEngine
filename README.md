@@ -1,6 +1,8 @@
 3D voxel engine programmed entirely in C++ and GLSL using OpenGL.
 
 <img width="1917" height="1076" alt="image" src="https://github.com/user-attachments/assets/751c28e9-eafd-40ae-92e6-5090ee18d945" />
+# How to run
+This github repository only contains the source code files and will need some work to run directly from here. I'm working on making it more user-friendly to download and run the project.
 
 # Features
 - Procedurally generated terrain using perlin noise.
