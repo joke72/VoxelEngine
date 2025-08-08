@@ -1,4 +1,5 @@
-3D voxel engine programmed in C++ and GLSL using OpenGL. 
+3D voxel engine programmed entirely in C++ and GLSL using OpenGL.
+
 <img width="1917" height="1076" alt="image" src="https://github.com/user-attachments/assets/751c28e9-eafd-40ae-92e6-5090ee18d945" />
 
 # Features
@@ -11,7 +12,8 @@
 - Screen Space ambient occlusion (SSAO)
 <img width="1913" height="1079" alt="image" src="https://github.com/user-attachments/assets/af854c18-9b57-4786-aa00-8ef78e6f7ca7" />
 
-- Physics Based Rendering (PBR)
+- Physics Based Rendering
+
 PBR:
 <img width="1915" height="1077" alt="image" src="https://github.com/user-attachments/assets/21f50fe6-e27c-46c2-89d3-c7e964a25edc" />
 Non-PBR:
